@@ -15,8 +15,8 @@ Decrease Button
 
 MAX7219 panels (at least 4)
 
-    CLK_PIN:		     D5
-    DATA_PIN:	       D7
-    CS_PIN:		       D8
-    VCC              5V
-    GND              GND
+    CLK_PIN   D5
+    DATA_PIN  D7
+    CS_PIN    D8
+    VCC       5V
+    GND       GND
