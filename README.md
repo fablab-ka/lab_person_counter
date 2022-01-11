@@ -7,16 +7,16 @@ Tested with an nodemcu chip
 
 Increase Button
 
-  D4 and GND
+    D4 and GND
 
 Decrease Button
 
-  D3 and GND
+    D3 and GND
 
 MAX7219 panels (at least 4)
 
-  CLK_PIN:		     D5
-  DATA_PIN:	       D7
-  CS_PIN:		       D8
-  VCC              5V
-  GND              GND
+    CLK_PIN:		     D5
+    DATA_PIN:	       D7
+    CS_PIN:		       D8
+    VCC              5V
+    GND              GND
