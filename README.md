@@ -20,3 +20,9 @@ MAX7219 panels (at least 4)
     CS_PIN    D8
     VCC       5V
     GND       GND
+
+# Usage
+
+Before flashing set the ssid and password. 
+Until the Display gets polled it shows it's IP. 
+It expects a request in under 10s or it goes back to showing it's IP.
