@@ -25,8 +25,8 @@
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
-const char* ssid = "matrix";
-const char* password = "einlangesundtollespasswort";
+const char* ssid = "<TODO>";
+const char* password = "<TODO>";
 
 WiFiServer server(80);
 
@@ -56,56 +56,7 @@ unsigned long lastDecreaseButtonDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
 
-char WebResponse[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
-
-char WebPage[] =
-"<!DOCTYPE html>" \
-"<html>" \
-"<head>" \
-"<title>eTechPath MAX7219 ESP8266</title>" \
-"<style>" \
-"html, body" \
-"{" \
-"width: 600px;" \
-"height: 400px;" \
-"margin: 0px;" \
-"border: 0px;" \
-"padding: 10px;" \
-"background-color: white;" \
-"}" \
-"#container " \
-"{" \
-"width: 100%;" \
-"height: 100%;" \
-"margin-left: 200px;" \
-"border: solid 2px;" \
-"padding: 10px;" \
-"background-color: #b3cbf2;" \
-"}" \
-"</style>"\
-"<script>" \
-"strLine = \"\";" \
-"function SendText()" \
-"{" \
-"  nocache = \"/&nocache=\" + Math.random() * 1000000;" \
-"  var request = new XMLHttpRequest();" \
-"  strLine = \"&MSG=\" + document.getElementById(\"txt_form\").Message.value;" \
-"  request.open(\"GET\", strLine + nocache, false);" \
-"  request.send(null);" \
-"}" \
-"</script>" \
-"</head>" \
-"<body>" \
-"<div id=\"container\">"\
-"<H1><b>WiFi MAX7219 LED Matrix Display</b></H1>" \
-"<form id=\"txt_form\" name=\"frmText\">" \
-"<label>Msg:<input type=\"text\" name=\"Message\" maxlength=\"255\"></label><br><br>" \
-"</form>" \
-"<br>" \
-"<input type=\"submit\" value=\"Send Text\" onclick=\"SendText()\">" \
-"</div>" \
-"</body>" \
-"</html>";
+char WebResponse[] = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
 
 String err2Str(wl_status_t code)
 {
@@ -250,7 +201,9 @@ void handleWiFi(void)
     PRINTS("\nS_RESPONSE");
     // Return the response to the client (web page)
     client.print(WebResponse);
-    client.print(WebPage);
+    client.print("{\"number\":");
+    client.print(currentNumberOfPeople);
+    client.print("}");
     state = S_DISCONN;
 
     // show number of people if display is polled
