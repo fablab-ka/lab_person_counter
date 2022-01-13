@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
 
@@ -25,10 +26,14 @@
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
-const char* ssid = "<TODO>";
-const char* password = "<TODO>";
+const char* ssid = "";
+const char* password = "";
+const char* webhook = "";
+const char *FINGERPRINT = "C3CCED7787196DE7765EAAA73D677ECA95D246E2";
 
 WiFiServer server(80);
+WiFiClientSecure httpsClient;
+HTTPClient httpClient;
 
 const uint8_t MESG_SIZE = 255;
 const uint8_t CHAR_SPACING = 1;
@@ -43,7 +48,6 @@ bool newMessageAvailable = false;
 
 int currentNumberOfPeople = 0;
 
-uint32_t lastPollTime = 0;
 bool isShowingIP = false;
 
 int increaseButtonState;
@@ -205,10 +209,6 @@ void handleWiFi(void)
     client.print(currentNumberOfPeople);
     client.print("}");
     state = S_DISCONN;
-
-    // show number of people if display is polled
-    lastPollTime = millis();
-    showNumberOfPeople();
     break;
 
   case S_DISCONN: // disconnect client
@@ -296,13 +296,42 @@ void scrollText(void)
   }
 }
 
+void sendNumberOfPeopleUpdate() {
+   if (WiFi.status() != WL_CONNECTED) {
+     return;
+  }
+
+  httpClient.begin(httpsClient, webhook);
+  httpClient.addHeader("Content-Type", "application/json");
+  String data = "{\"text\":\"Ab jetzt sind " + String(currentNumberOfPeople) + " von maximal 6 Personen im Lab\"}";
+
+  int httpCode = httpClient.POST(data);
+  if (httpCode > 0) {
+    // HTTP header has been send and Server response header has been handled
+    Serial.printf("[HTTP] POST... code: %d\n", httpCode);
+
+    // file found at server
+    if (httpCode == HTTP_CODE_OK) {
+      const String& payload = httpClient.getString();
+      Serial.println("received payload:\n<<");
+      Serial.println(payload);
+      Serial.println(">>");
+    }
+  } else {
+    Serial.printf("[HTTP] POST... failed, error: %s\n", httpClient.errorToString(httpCode).c_str());
+  }
+  httpClient.end();
+}
+
 void increaseNumberOfPeople() {
   Serial.println("increaseNumberOfPeople");
   currentNumberOfPeople++;
   if (currentNumberOfPeople > MAX_NUMBER_OF_PEOPLE) {
     currentNumberOfPeople = MAX_NUMBER_OF_PEOPLE;
+  } else {
+    showNumberOfPeople();
+    sendNumberOfPeopleUpdate();
   }
-  showNumberOfPeople();
 }
 
 void decreaseNumberOfPeople() {
@@ -310,8 +339,10 @@ void decreaseNumberOfPeople() {
   currentNumberOfPeople--;
   if (currentNumberOfPeople < 0) {
     currentNumberOfPeople = 0;
+  } else {
+    showNumberOfPeople();
+    sendNumberOfPeopleUpdate();
   }
-  showNumberOfPeople();
 }
 
 void handleButtons() {
@@ -380,6 +411,8 @@ void setup()
   }
   PRINTS("\nWiFi connected");
 
+  httpsClient.setFingerprint(FINGERPRINT);
+
   // Start the server
   server.begin();
   PRINTS("\nServer started");
@@ -396,8 +429,6 @@ void loop()
 
   if (isShowingIP) {
     scrollText();
-  } else if ((millis() - lastPollTime) >= POLL_TIMEOUT) {
-    showIP();
   }
 }
 
