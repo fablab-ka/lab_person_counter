@@ -26,6 +26,8 @@
 #define RELAY_FULL_PIN          D1
 #define RELAY_VACANT_PIN        D2
 
+#define UPDATE_DEBOUNCE_MS      (60 * 1000)
+
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
@@ -62,6 +64,8 @@ unsigned long lastIncreaseButtonDebounceTime = 0;
 unsigned long lastDecreaseButtonDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
+bool queueStateUpdate = false;
+unsigned long lastStateChange = 0;
 
 char WebResponse[] = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
 
@@ -339,8 +343,9 @@ void increaseNumberOfPeople() {
   if (currentNumberOfPeople > MAX_NUMBER_OF_PEOPLE) {
     currentNumberOfPeople = MAX_NUMBER_OF_PEOPLE;
   } else {
+    lastStateChange = millis();
+    queueStateUpdate = true;
     showNumberOfPeople();
-    sendNumberOfPeopleUpdate();
     updateVacancyRelayState();
   }
 }
@@ -351,8 +356,9 @@ void decreaseNumberOfPeople() {
   if (currentNumberOfPeople < 0) {
     currentNumberOfPeople = 0;
   } else {
+    lastStateChange = millis();
+    queueStateUpdate = true;
     showNumberOfPeople();
-    sendNumberOfPeopleUpdate();
     updateVacancyRelayState();
   }
 }
@@ -441,6 +447,11 @@ void loop()
   handleWiFi();
 
   handleButtons();
+
+  if (queueStateUpdate && lastStateChange + UPDATE_DEBOUNCE_MS >= millis()) {
+      queueStateUpdate = false;
+      sendNumberOfPeopleUpdate();
+  }
 
   if (isShowingIP) {
     scrollText();
