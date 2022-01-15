@@ -23,6 +23,9 @@
 #define	INCREASE_BUTTON_PIN		D4
 #define	DECREASE_BUTTON_PIN		D3
 
+#define RELAY_FULL_PIN          D1
+#define RELAY_VACANT_PIN        D2
+
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
@@ -297,8 +300,8 @@ void scrollText(void)
 }
 
 void sendNumberOfPeopleUpdate() {
-   if (WiFi.status() != WL_CONNECTED) {
-     return;
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
   }
 
   httpClient.begin(httpsClient, webhook);
@@ -323,6 +326,13 @@ void sendNumberOfPeopleUpdate() {
   httpClient.end();
 }
 
+void updateVacancyRelayState() {
+  digitalWrite(RELAY_FULL_PIN, LOW);
+  digitalWrite(RELAY_VACANT_PIN, LOW);
+  digitalWrite(RELAY_FULL_PIN, !(currentNumberOfPeople >= MAX_NUMBER_OF_PEOPLE && currentNumberOfPeople > 0));
+  digitalWrite(RELAY_VACANT_PIN, !(currentNumberOfPeople < MAX_NUMBER_OF_PEOPLE && currentNumberOfPeople > 0));
+}
+
 void increaseNumberOfPeople() {
   Serial.println("increaseNumberOfPeople");
   currentNumberOfPeople++;
@@ -331,6 +341,7 @@ void increaseNumberOfPeople() {
   } else {
     showNumberOfPeople();
     sendNumberOfPeopleUpdate();
+    updateVacancyRelayState();
   }
 }
 
@@ -342,6 +353,7 @@ void decreaseNumberOfPeople() {
   } else {
     showNumberOfPeople();
     sendNumberOfPeopleUpdate();
+    updateVacancyRelayState();
   }
 }
 
@@ -389,6 +401,9 @@ void setup()
   
   pinMode(INCREASE_BUTTON_PIN, INPUT);
   pinMode(DECREASE_BUTTON_PIN, INPUT);
+
+  pinMode(RELAY_FULL_PIN, OUTPUT);
+  pinMode(RELAY_VACANT_PIN, OUTPUT);
 
   // Display initialisation
   mx.begin();
