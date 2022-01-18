@@ -23,10 +23,15 @@
 #define	INCREASE_BUTTON_PIN		D4
 #define	DECREASE_BUTTON_PIN		D3
 
-#define RELAY_FULL_PIN          D1
-#define RELAY_VACANT_PIN        D2
+#define VACANCY_FULL_PIN        D0
+#define VACANCY_VACANT_PIN      D1
+#define VACANCY_INVERT_OUTPUT   1
+#define VACANCY_PWM_ENABLED     1
+#define VACANCY_PWM_CONTROL_PIN A0
+#define VACANCY_PWM_FREQUENCY   1000
+#define VACANCY_PWM_MULTIPLIER  0.15
 
-#define UPDATE_DEBOUNCE_MS      (60 * 1000)
+#define UPDATE_DEBOUNCE_MS      (30 * 1000)
 
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
@@ -330,11 +335,30 @@ void sendNumberOfPeopleUpdate() {
   httpClient.end();
 }
 
-void updateVacancyRelayState() {
-  digitalWrite(RELAY_FULL_PIN, LOW);
-  digitalWrite(RELAY_VACANT_PIN, LOW);
-  digitalWrite(RELAY_FULL_PIN, !(currentNumberOfPeople >= MAX_NUMBER_OF_PEOPLE && currentNumberOfPeople > 0));
-  digitalWrite(RELAY_VACANT_PIN, !(currentNumberOfPeople < MAX_NUMBER_OF_PEOPLE && currentNumberOfPeople > 0));
+void updateVacancyPinsState() {
+  int isFull = currentNumberOfPeople >= MAX_NUMBER_OF_PEOPLE;
+  int isNotEmpty = currentNumberOfPeople > 0;
+  int vacancyState = isNotEmpty && !isFull;
+  int fullState = isNotEmpty && isFull;
+
+#if VACANCY_PWM_ENABLED
+  double pwmValue = (double) (analogRead(VACANCY_PWM_CONTROL_PIN)) * VACANCY_PWM_MULTIPLIER;
+  pwmValue = pwmValue > 255 ? 255 : (pwmValue < 0 ? 0 : pwmValue);
+  analogWrite(VACANCY_VACANT_PIN, (int) (pwmValue * vacancyState));
+  analogWrite(VACANCY_FULL_PIN, (int) (pwmValue * fullState));
+#else
+#if VACANCY_INVERT_OUTPUT
+  digitalWrite(VACANCY_VACANT_PIN, HIGH);
+  digitalWrite(VACANCY_FULL_PIN, HIGH);
+  digitalWrite(VACANCY_VACANT_PIN, 1 - vacancyState);
+  digitalWrite(VACANCY_FULL_PIN, 1 - fullState);
+#else
+  digitalWrite(VACANCY_VACANT_PIN, LOW);
+  digitalWrite(VACANCY_FULL_PIN, LOW);
+  digitalWrite(VACANCY_VACANT_PIN, vacancyState);
+  digitalWrite(VACANCY_FULL_PIN, fullState);
+#endif
+#endif
 }
 
 void increaseNumberOfPeople() {
@@ -346,7 +370,6 @@ void increaseNumberOfPeople() {
     lastStateChange = millis();
     queueStateUpdate = true;
     showNumberOfPeople();
-    updateVacancyRelayState();
   }
 }
 
@@ -359,7 +382,6 @@ void decreaseNumberOfPeople() {
     lastStateChange = millis();
     queueStateUpdate = true;
     showNumberOfPeople();
-    updateVacancyRelayState();
   }
 }
 
@@ -408,8 +430,12 @@ void setup()
   pinMode(INCREASE_BUTTON_PIN, INPUT);
   pinMode(DECREASE_BUTTON_PIN, INPUT);
 
-  pinMode(RELAY_FULL_PIN, OUTPUT);
-  pinMode(RELAY_VACANT_PIN, OUTPUT);
+  pinMode(VACANCY_FULL_PIN, OUTPUT);
+  pinMode(VACANCY_VACANT_PIN, OUTPUT);
+#if VACANCY_PWM_ENABLED
+  analogWriteFreq(VACANCY_PWM_FREQUENCY);
+  pinMode(VACANCY_PWM_CONTROL_PIN, INPUT);
+#endif
 
   // Display initialisation
   mx.begin();
@@ -448,14 +474,14 @@ void loop()
 
   handleButtons();
 
-  if (queueStateUpdate && lastStateChange + UPDATE_DEBOUNCE_MS >= millis()) {
-      queueStateUpdate = false;
-      sendNumberOfPeopleUpdate();
+  updateVacancyPinsState();
+
+  if (queueStateUpdate && millis() >= lastStateChange + UPDATE_DEBOUNCE_MS) {
+    queueStateUpdate = false;
+    sendNumberOfPeopleUpdate();
   }
 
   if (isShowingIP) {
     scrollText();
   }
 }
-
-
