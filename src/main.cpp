@@ -470,6 +470,8 @@ void setup()
 
 void loop()
 {
+  delay(25);
+
   handleWiFi();
 
   handleButtons();
