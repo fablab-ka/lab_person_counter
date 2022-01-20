@@ -477,8 +477,18 @@ void loop()
   updateVacancyPinsState();
 
   if (queueStateUpdate && millis() >= lastStateChange + UPDATE_DEBOUNCE_MS) {
-    queueStateUpdate = false;
-    sendNumberOfPeopleUpdate();
+      if (WiFi.status() != WL_CONNECTED) {
+        digitalWrite(D5, HIGH);
+        Serial.printf("ERROR: wifi connection lost\n\rWiFi.status(): %i\n\rWiFi.reconnect()...\n\r", WiFi.status());
+        WiFi.reconnect();
+        Serial.printf("WiFi.status(): %i\n\rWiFi.printDiag():\n\r", WiFi.status());
+        WiFi.printDiag(Serial);
+        lastStateChange = millis();
+      } else {
+        digitalWrite(D5, LOW);
+        queueStateUpdate = false;
+        sendNumberOfPeopleUpdate();
+      }
   }
 
   if (isShowingIP) {
