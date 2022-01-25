@@ -57,6 +57,7 @@ char newMessage[MESG_SIZE];
 bool newMessageAvailable = false;
 
 int currentNumberOfPeople = 0;
+int lastReportedNumberOfPeople = -1;
 
 bool isShowingIP = false;
 
@@ -309,6 +310,9 @@ void scrollText(void)
 }
 
 void sendNumberOfPeopleUpdate() {
+  if (lastReportedNumberOfPeople == currentNumberOfPeople) {
+    return;
+  }
   if (WiFi.status() != WL_CONNECTED) {
     return;
   }
@@ -333,6 +337,7 @@ void sendNumberOfPeopleUpdate() {
     Serial.printf("[HTTP] POST... failed, error: %s\n", httpClient.errorToString(httpCode).c_str());
   }
   httpClient.end();
+  lastReportedNumberOfPeople = currentNumberOfPeople;
 }
 
 void updateVacancyPinsState() {
