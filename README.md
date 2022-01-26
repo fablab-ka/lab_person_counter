@@ -76,6 +76,7 @@ Fill the `webhook` variable with this URL and the lab person counter will automa
 #### Debouncing
 
 The notifications can be "debounced". This means that a notification will only be sent after a defined amount of time _t_ after the last status change.  
+This prevents spamming of notifications on quick successive status change, for example when a lot of people arrive or leave at once.  
 This debounce time _t_ can be changed via the `UPDATE_DEBOUNCE_MS` definition, and must be specified in milliseconds.
 
     #define UPDATE_DEBOUNCE_MS      (30 * 1000)
