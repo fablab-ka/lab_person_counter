@@ -67,7 +67,7 @@ The multiplier applied to the read value can be changed by modifying the `VACANC
 
 To make use of Slack notifications whenever the number of people changes, create an [incoming webhook][1] for your slack workspace.  
 You will get a unique URL looking something like this: `https://hooks.slack.com/services/...`  
-Fill the `` variable with this URL and the lab person counter will automatically announce any change to the channel that is set up for your webhook.
+Fill the `webhook` variable with this URL and the lab person counter will automatically announce any change to the channel that is set up for your webhook.
 
     const char* webhook = "https://hooks.slack.com/services/..."
 
