@@ -310,6 +310,9 @@ void scrollText(void)
 }
 
 void sendNumberOfPeopleUpdate() {
+  if (webhook == nullptr || *webhook == 0) {
+    return;
+  }
   if (lastReportedNumberOfPeople == currentNumberOfPeople) {
     return;
   }
