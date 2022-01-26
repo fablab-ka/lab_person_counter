@@ -63,6 +63,23 @@ The multiplier applied to the read value can be changed by modifying the `VACANC
 
     #define VACANCY_PWM_MULTIPLIER  0.15
 
+# Slack notifications / Reporting
+
+To make use of Slack notifications whenever the number of people changes, create an [incoming webhook][1] for your slack workspace.  
+You will get a unique URL looking something like this: `https://hooks.slack.com/services/...`  
+Fill the `` variable with this URL and the lab person counter will automatically announce any change to the channel that is set up for your webhook.
+
+    const char* webhook = "https://hooks.slack.com/services/..."
+
+[1]: https://api.slack.com/messaging/webhooks
+
+#### Debouncing
+
+The notifications can be "debounced". This means that a notification will only be sent after a defined amount of time _t_ after the last status change.  
+This debounce time _t_ can be changed via the `UPDATE_DEBOUNCE_MS` definition, and must be specified in milliseconds.
+
+    #define UPDATE_DEBOUNCE_MS      (30 * 1000)
+
 # Usage
 
 Before flashing set the `ssid` and `password`. 
