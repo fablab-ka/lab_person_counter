@@ -49,8 +49,8 @@ const uint8_t MESG_SIZE = 255;
 const uint8_t CHAR_SPACING = 1;
 const uint8_t SCROLL_DELAY = 75;
 const uint32_t POLL_TIMEOUT = 10000;
-const int MAX_NUMBER_OF_PEOPLE = 6;
-const char MAX_NUMBER_OF_PEOPLE_CHAR = '6';
+const int MAX_NUMBER_OF_PEOPLE = 8;
+const char MAX_NUMBER_OF_PEOPLE_CHAR = '8';
 
 char curMessage[MESG_SIZE];
 char newMessage[MESG_SIZE];
@@ -322,7 +322,7 @@ void sendNumberOfPeopleUpdate() {
 
   httpClient.begin(httpsClient, webhook);
   httpClient.addHeader("Content-Type", "application/json");
-  String data = "{\"text\":\"Ab jetzt sind " + String(currentNumberOfPeople) + " von maximal 6 Personen im Lab\"}";
+  String data = "{\"text\":\"Ab jetzt sind " + String(currentNumberOfPeople) + " von maximal " + MAX_NUMBER_OF_PEOPLE_CHAR + " Personen im Lab\"}";
 
   int httpCode = httpClient.POST(data);
   if (httpCode > 0) {
